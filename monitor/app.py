@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 import uvicorn, time, json
 from pathlib import Path
-from monitor import db
+import db
 import uuid
 
 APPDIR=Path('/home/ubuntu/agent-repo/monitor')
@@ -117,7 +117,7 @@ async def list_targets():
         rows=c.execute('select cid,url,last_probe,last_ok,next_run from canonical_targets').fetchall()
         return [dict(r) for r in rows]
 
-import monitor.reports as reports
+import reports
 
 @app.get('/reports/cid/{cid}')
 async def report_cid(cid: str, limit: int = 100):

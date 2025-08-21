@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import time, json, subprocess
 from pathlib import Path
-APP=Path('/home/ubuntu/monitor')
-DB=APP/'db.json'
+import sys
+sys.path.append('/home/ubuntu/agent-repo/monitor')
+import db
 LOG=Path('/home/ubuntu/opencode_actions.log')
-EMER=APP/'EMERGENCY_PAUSE'
+EMER=Path('/home/ubuntu/monitor')/'EMERGENCY_PAUSE'
 
 def log(action,details=''):
     ts=time.strftime('%Y-%m-%dT%H:%M:%S%z')
@@ -17,75 +18,121 @@ while True:
         time.sleep(30)
         continue
     try:
-        data=json.loads(DB.read_text())
-    except Exception:
+        with db.get_conn() as conn:
+            c = conn.cursor()
+            # Get watchers with their target information
+            data = c.execute('''
+                SELECT w.wid, w.interval, w.enabled, t.url, t.probe_type
+                FROM watchers w
+                JOIN canonical_targets t ON w.cid = t.cid
+                WHERE w.enabled = 1
+            ''').fetchall()
+            data = [dict(row) for row in data]
+    except Exception as e:
+        log('CHECKER_DB_ERROR', str(e))
         data=[]
     for entry in data:
-        t=entry.get('target')
-        if not t: continue
-        url=t.get('url')
-        port=t.get('port')
+
+        url=entry.get('url')
+        probe_type=entry.get('probe_type', 'http')
         import json
         cfg=json.loads(Path('/home/ubuntu/agent-repo/monitor/config.json').read_text())
-        interval=max(t.get('interval',60), cfg.get('min_interval',60))
-        last=entry.get('last_check',0)
-        if time.time()-last<interval: continue
+        interval=max(entry.get('interval',60), cfg.get('min_interval',60))
+
+        # Get the original interval from database for timing calculations
+        original_interval = entry.get('interval', 60)
+
+        # Check if we should run this check
+        # Use the watcher's specific interval instead of shared canonical target timing
+        with db.get_conn() as conn:
+            c = conn.cursor()
+            # Get the last probe time for this specific watcher
+            row = c.execute('SELECT last_probe FROM watchers WHERE wid = ?', (entry.get('wid'),)).fetchone()
+            last_probe = row['last_probe'] if row else 0
+            if time.time() < (last_probe + original_interval): continue
+
+        # Check if we should run this check
+        # Use the watcher's specific interval instead of shared canonical target timing
+        with db.get_conn() as conn:
+            c = conn.cursor()
+            # Get the last probe time for this specific watcher
+            row = c.execute('SELECT last_probe FROM watchers WHERE wid = ?', (entry.get('wid'),)).fetchone()
+            last_probe = row['last_probe'] if row else 0
+            if time.time() < (last_probe + original_interval): continue
+
+
+
         # simple HTTP/port probe
         ok=False
-        if url:
+        if url and probe_type == 'http':
             try:
                 r=subprocess.run(['curl','-sSf','--max-time','10',url],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                 ok=(r.returncode==0)
             except Exception:
                 ok=False
-        elif port and 'host' in t:
+        elif probe_type == 'port' and 'host' in entry and 'port' in entry:
             import socket
             s=socket.socket(); s.settimeout(5)
             try:
-                s.connect((t['host'],int(port)))
+                s.connect((entry['host'],int(entry['port'])))
                 ok=True
             except Exception:
                 ok=False
             finally:
                 s.close()
-        entry['last_check']=time.time()
-        entry['last_ok']=ok
-        # atomic DB write with lock
+
+        # Update the database with results
         try:
-            import fcntl
-            with open(DB,'r+') as df:
-                try:
-                    fcntl.flock(df, fcntl.LOCK_EX)
-                    tmp=DB.with_suffix('.tmp')
-                    tmp.write_text(json.dumps(data))
-                    tmp.replace(DB)
-                finally:
-                    try:
-                        fcntl.flock(df, fcntl.LOCK_UN)
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+            with db.get_conn() as conn:
+                c = conn.cursor()
+                now = time.time()
+                # Only update the watcher's own last_probe time - don't affect other watchers
+                c.execute('UPDATE watchers SET last_probe = ? WHERE wid = ?', (now, entry.get('wid')))
+                conn.commit()
+        except Exception as e:
+            log('CHECKER_UPDATE_ERROR', str(e))
         # attempt to consume credits via local API (always attempt)
         try:
             import requests
-            resp=requests.post('http://127.0.0.1:8000/consume',json={'id':entry.get('id'),'cost':1},timeout=5)
+            resp=requests.post('http://127.0.0.1:8000/consume',json={'wid':entry.get('wid'),'cost':1},timeout=5)
             if resp.status_code==200:
                 credits=resp.json().get('credits')
-                log('CONSUME',f"id={entry.get('id')} cost=1 credits_left={credits}")
+                log('CONSUME',f"wid={entry.get('wid')} cost=1 credits_left={credits}")
                 # append to customer history
                 from pathlib import Path
-                custdir=Path('/home/ubuntu/agent-repo/monitor/customers')/entry.get('id')
-                custdir.mkdir(parents=True,exist_ok=True)
-                hist=custdir/'history.log'
-                with open(hist,'a') as hf:
-                    hf.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S%z')}\tCHECK\tok={ok}\tcredits_left={credits}\n")
+                wid = entry.get('wid')
+                if wid:
+                    # Get the token for this watcher to construct the correct path
+                    with db.get_conn() as conn:
+                        c = conn.cursor()
+                        token_row = c.execute('SELECT token FROM watchers WHERE wid = ?', (wid,)).fetchone()
+                        if token_row:
+                            token = token_row['token']
+                            custdir = Path('/home/ubuntu/agent-repo/monitor/customers')/token/'watchers'
+                            custdir.mkdir(parents=True,exist_ok=True)
+                            hist = custdir/f'{wid}.log'
+                            # Write in JSON format for consistency with other history files
+                            import json
+                            history_entry = {
+                                'ts': time.time(),
+                                'wid': wid,
+                                'cid': entry.get('cid', ''),
+                                'probe': {
+                                    'ts': time.time(),
+                                    'status': 'ok' if ok else 'fail',
+                                    'http_status': 200 if ok else 0,
+                                    'latency_ms': 0,
+                                    'size': 0
+                                }
+                            }
+                            with open(hist,'a') as hf:
+                                hf.write(json.dumps(history_entry) + '\n')
             else:
                 try:
                     detail=resp.text
                 except Exception:
                     detail='(no body)'
-                log('CHECK_FAILED_CHARGE',f"id={entry.get('id')} status={resp.status_code} detail={detail}")
+                log('CHECK_FAILED_CHARGE',f"wid={entry.get('wid')} status={resp.status_code} detail={detail}")
         except Exception as e:
             log('CHECK_CHARGE_ERR',str(e))
         
