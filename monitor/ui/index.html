@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Opencode Uptime Monitor</title>
+  <style>body{font-family:Arial,sans-serif;max-width:900px;margin:2rem auto;padding:1rem} label{display:block;margin-top:1rem} input,button,textarea{padding:.5rem;width:100%}</style>
+</head>
+<body>
+  <h1>Opencode Uptime Monitor (MVP)</h1>
+  <section>
+    <h2>Register a target</h2>
+    <label>URL<input id="url" placeholder="https://example.com"></label>
+    <label>Interval (seconds)<input id="interval" value="60"></label>
+    <button id="register">Register</button>
+    <pre id="regout"></pre>
+    <div id="regsuccess" style="color:green"></div>
+  </section>
+  <section>
+    <h2>Top up credits</h2>
+    <label>Customer ID<input id="cid" placeholder="id from register"></label>
+    <label>Sats<input id="sats" value="100"></label>
+    <button id="topup">Top up</button>
+    <pre id="topout"></pre>
+  </section>
+  <section>
+    <h2>Your page</h2>
+    <label>Customer ID<input id="mycid" placeholder="customer id"></label>
+    <button id="mydata">Show my history</button>
+    <pre id="myouth"></pre>
+  </section>
+  <section>
+    <h2>Targets</h2>
+    <button id="list">Refresh list</button>
+    <pre id="listout"></pre>
+  </section>
+<script>
+const apiBase='http://'+location.host;
+document.getElementById('register').onclick=async()=>{
+  const url=document.getElementById('url').value, interval=parseInt(document.getElementById('interval').value||60);
+  try{
+    const resp=await fetch('/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({target:{url,interval}})});
+    const data=await resp.json();
+    if(resp.status>=400){ document.getElementById('regout').textContent=JSON.stringify(data,null,2); document.getElementById('regsuccess').textContent=''; return }
+    document.getElementById('regout').textContent=JSON.stringify(data,null,2);
+    document.getElementById('regsuccess').textContent='Registered! ID: '+data.id;
+    document.getElementById('cid').value=data.id; document.getElementById('mycid').value=data.id;
+  }catch(e){ document.getElementById('regout').textContent=String(e); document.getElementById('regsuccess').textContent=''; }
+}
+document.getElementById('topup').onclick=async()=>{
+  const id=document.getElementById('cid').value, sats=parseInt(document.getElementById('sats').value||100);
+  const resp=await fetch('/topup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,sats})});
+  const data=await resp.json(); document.getElementById('topout').textContent=JSON.stringify(data,null,2);
+}
+document.getElementById('list').onclick=async()=>{
+  const resp=await fetch('/targets'); const data=await resp.json(); document.getElementById('listout').textContent=JSON.stringify(data,null,2);
+}
+
+document.getElementById('mydata').onclick=async()=>{
+  const id=document.getElementById('mycid').value;
+  const resp=await fetch('/targets'); const data=await resp.json();
+  const my=data.filter(d=>d.id==id);
+  document.getElementById('myouth').textContent=JSON.stringify(my,null,2);
+}
+</script>
+</body>
+</html>

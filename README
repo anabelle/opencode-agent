@@ -1,0 +1,5 @@
+Opencode agent-repo snapshot
+- UI: /home/ubuntu/agent-repo/monitor/ui/index.html
+- FastAPI app: /home/ubuntu/agent-repo/monitor/app.py
+- Checker: /home/ubuntu/monitor/checker.py
+- DB: /home/ubuntu/monitor/db.json

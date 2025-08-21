@@ -50,14 +50,23 @@ while True:
                 s.close()
         entry['last_check']=time.time()
         entry['last_ok']=ok
-        # atomic DB write
+        # atomic DB write with lock
         try:
-            tmp=DB.with_suffix('.tmp')
-            tmp.write_text(json.dumps(data))
-            tmp.replace(DB)
+            import fcntl
+            with open(DB,'r+') as df:
+                try:
+                    fcntl.flock(df, fcntl.LOCK_EX)
+                    tmp=DB.with_suffix('.tmp')
+                    tmp.write_text(json.dumps(data))
+                    tmp.replace(DB)
+                finally:
+                    try:
+                        fcntl.flock(df, fcntl.LOCK_UN)
+                    except Exception:
+                        pass
         except Exception:
             pass
-        # attempt to consume credits via local API
+        # attempt to consume credits via local API (always attempt)
         try:
             import requests
             resp=requests.post('http://127.0.0.1:8000/consume',json={'id':entry.get('id'),'cost':1},timeout=5)
@@ -66,11 +75,17 @@ while True:
                 log('CONSUME',f"id={entry.get('id')} cost=1 credits_left={credits}")
                 # append to customer history
                 from pathlib import Path
-                hist=Path('/home/ubuntu/agent-repo/monitor/customers')/entry.get('id')/'history.log'
+                custdir=Path('/home/ubuntu/agent-repo/monitor/customers')/entry.get('id')
+                custdir.mkdir(parents=True,exist_ok=True)
+                hist=custdir/'history.log'
                 with open(hist,'a') as hf:
                     hf.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S%z')}\tCHECK\tok={ok}\tcredits_left={credits}\n")
             else:
-                log('CHECK_FAILED_CHARGE',f"id={entry.get('id')} status={resp.status_code} detail={resp.text}")
+                try:
+                    detail=resp.text
+                except Exception:
+                    detail='(no body)'
+                log('CHECK_FAILED_CHARGE',f"id={entry.get('id')} status={resp.status_code} detail={detail}")
         except Exception as e:
             log('CHECK_CHARGE_ERR',str(e))
         
