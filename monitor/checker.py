@@ -48,19 +48,28 @@ while True:
                 s.close()
         entry['last_check']=time.time()
         entry['last_ok']=ok
+        # atomic DB write
+        try:
+            tmp=DB.with_suffix('.tmp')
+            tmp.write_text(json.dumps(data))
+            tmp.replace(DB)
+        except Exception:
+            pass
         # attempt to consume credits via local API
         try:
             import requests
             resp=requests.post('http://127.0.0.1:8000/consume',json={'id':entry.get('id'),'cost':1},timeout=5)
             if resp.status_code==200:
-                log('CHECK',f"id={entry.get('id')} ok={ok} target={t} consumed=1 credits_left={resp.json().get('credits')}")
+                credits=resp.json().get('credits')
+                log('CONSUME',f"id={entry.get('id')} cost=1 credits_left={credits}")
+                # append to customer history
+                from pathlib import Path
+                hist=Path('/home/ubuntu/agent-repo/monitor/customers')/entry.get('id')/'history.log'
+                with open(hist,'a') as hf:
+                    hf.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S%z')}\tCHECK\tok={ok}\tcredits_left={credits}\n")
             else:
                 log('CHECK_FAILED_CHARGE',f"id={entry.get('id')} status={resp.status_code} detail={resp.text}")
         except Exception as e:
             log('CHECK_CHARGE_ERR',str(e))
         
-    try:
-        open(DB,'w').write(json.dumps(data))
-    except Exception:
-        pass
     time.sleep(5)
