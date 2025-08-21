@@ -115,6 +115,16 @@ async def list_targets():
         rows=c.execute('select cid,url,last_probe,last_ok,next_run from canonical_targets').fetchall()
         return [dict(r) for r in rows]
 
+import monitor.reports as reports
+
+@app.get('/reports/cid/{cid}')
+async def report_cid(cid: str, limit: int = 100):
+    return reports.reports_for_cid(cid)
+
+@app.get('/reports/wid/{token}/{wid}')
+async def report_wid(token: str, wid: str, limit: int = 100):
+    return reports.timeseries_for_wid(token, wid, limit=limit)
+
 @app.post('/consume')
 async def consume(data: dict):
     wid=data.get('wid')

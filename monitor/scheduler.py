@@ -48,9 +48,9 @@ async def handle_canonical(cid, url, simulate=False):
             wid=w['wid']
             token=w['token']
             # write per-watcher history
-            cust_dir=BASE/f"customers/{token}"/watchers
-            cust_dir.mkdir(parents=True, exist_ok=True)
-            hist=cust_dir/f"{wid}.log"
+            cust_watchers_dir=BASE/f"customers/{token}/watchers"
+            cust_watchers_dir.mkdir(parents=True, exist_ok=True)
+            hist=cust_watchers_dir/f"{wid}.log"
             entry={'ts':now,'wid':wid,'cid':cid,'probe':rec}
             with hist.open('a') as hf:
                 hf.write(json.dumps(entry)+"\n")
