@@ -32,6 +32,19 @@
 - [x] Add last_probe column to watchers table for independent timing
 - [x] Resolve all watcher functionality issues (credits, history, timing)
 
+## Testing
+- [ ] Set up testing framework (pytest, coverage)
+- [ ] Add unit tests for core components:
+  - [ ] Database operations (db.py)
+  - [ ] API endpoints (app.py)
+  - [ ] Checker logic (checker.py)
+  - [ ] Report generation (reports.py)
+- [ ] Add integration tests for API endpoints
+- [ ] Add database migration and schema tests
+- [ ] Add end-to-end tests for watcher registration and monitoring
+- [ ] Set up CI/CD pipeline for automated testing
+- [ ] Add performance tests for monitoring under load
+
 ## Ops
 - [x] Automate daily backups and retention (implemented via cron)
 - [x] Add monitoring alerts for load/disk (disk_monitor.sh, hourly checks)
