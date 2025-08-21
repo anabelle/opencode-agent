@@ -25,7 +25,9 @@ while True:
         if not t: continue
         url=t.get('url')
         port=t.get('port')
-        interval=t.get('interval',60)
+        import json
+        cfg=json.loads(Path('/home/ubuntu/agent-repo/monitor/config.json').read_text())
+        interval=max(t.get('interval',60), cfg.get('min_interval',60))
         last=entry.get('last_check',0)
         if time.time()-last<interval: continue
         # simple HTTP/port probe
