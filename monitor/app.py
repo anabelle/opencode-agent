@@ -15,8 +15,17 @@ def log(action, details=''):
     with open(LOG,'a') as f:
         f.write(f"{ts}\t{action}\t{details}\n")
 
+def check_admin_key(headers):
+    from pathlib import Path
+    kfile=Path('/home/ubuntu/agent-repo/monitor/admin.key')
+    if not kfile.exists(): return False
+    expected=kfile.read_text().strip()
+    return headers.get('x-admin-key')==expected
+
 @app.post('/register')
-async def register(target: dict):
+async def register(target: dict, headers: dict = None):
+    # allow registration without admin key for MVP
+    
     data=json.loads(DB.read_text())
     entry={'id':str(int(time.time()*1000)),'target':target,'credits':0,'created':time.time()}
     data.append(entry)
