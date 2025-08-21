@@ -50,9 +50,19 @@ function loadToken(){ return qs('token') || localStorage.getItem('opencode_token
 document.getElementById('do-topup').onclick=async()=>{
   const sats=parseInt(document.getElementById('sats').value||100);
   const resp=await fetch('/topup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({sats})});
-  const j=await resp.json();
-  document.getElementById('topout').textContent=JSON.stringify(j,null,2);
-  if(j.token){ saveToken(j.token); window.location.href = '/d/' + j.token; }
+  if(resp.headers.get('content-type')?.includes('html')){
+    // Handle HTML redirect response
+    const html=await resp.text();
+    document.getElementById('topout').textContent='Topup successful, redirecting...';
+    // Extract token from redirect URL in HTML
+    const match=html.match(/\/d\/([a-f0-9-]+)/);
+    if(match){ saveToken(match[1]); window.location.href = '/d/' + match[1]; }
+  }else{
+    // Fallback to JSON
+    const j=await resp.json();
+    document.getElementById('topout').textContent=JSON.stringify(j,null,2);
+    if(j.token){ saveToken(j.token); window.location.href = '/d/' + j.token; }
+  }
 }
 
 // register uses token
