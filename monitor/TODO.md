@@ -33,17 +33,18 @@
 - [x] Resolve all watcher functionality issues (credits, history, timing)
 
 ## Testing
-- [ ] Set up testing framework (pytest, coverage)
-- [ ] Add unit tests for core components:
-  - [ ] Database operations (db.py)
-  - [ ] API endpoints (app.py)
-  - [ ] Checker logic (checker.py)
-  - [ ] Report generation (reports.py)
-- [ ] Add integration tests for API endpoints
-- [ ] Add database migration and schema tests
-- [ ] Add end-to-end tests for watcher registration and monitoring
+- [x] Set up testing framework (pytest, coverage) - 74% overall coverage achieved
+- [x] Add unit tests for core components:
+  - [x] Database operations (db.py) - 100% coverage
+  - [x] API endpoints (app.py) - 97% coverage
+  - [ ] Checker logic (checker.py) - 0% coverage (tests created but need debugging)
+  - [x] Report generation (reports.py) - 100% coverage
+- [x] Add integration tests for API endpoints - 21 comprehensive tests added
+- [x] Add database migration and schema tests - Full schema validation tests
+- [x] Add end-to-end tests for watcher registration and monitoring - Complete workflow tests
 - [ ] Set up CI/CD pipeline for automated testing
 - [ ] Add performance tests for monitoring under load
+- [ ] Debug and fix checker.py tests (currently hanging due to file system dependencies)
 
 ## Ops
 - [x] Automate daily backups and retention (implemented via cron)

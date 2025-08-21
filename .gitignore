@@ -33,6 +33,9 @@ ENV/
 *.log
 *.log.1.gz
 logs/
+monitor/checker.log
+monitor/earnings.log
+opencode_actions.log
 
 # Runtime data
 monitor/analytics/

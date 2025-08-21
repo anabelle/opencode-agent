@@ -1,13 +1,16 @@
 import sqlite3
-from pathlib import Path
 from contextlib import contextmanager
+from pathlib import Path
+
 DB_PATH = Path(__file__).parent / "monitor.db"
+
 
 def init_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.executescript('''
+    c.executescript(
+        """
     PRAGMA foreign_keys=ON;
     create table if not exists sessions(
         token text primary key,
@@ -43,9 +46,11 @@ def init_db():
         balance integer,
         note text
     );
-    ''')
+    """
+    )
     conn.commit()
     conn.close()
+
 
 @contextmanager
 def get_conn():
