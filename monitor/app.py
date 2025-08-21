@@ -62,7 +62,9 @@ async def topup(data: dict):
         c.execute('insert into ledger(ts,action,token,amount,balance,note) values(?,?,?,?,?,?)', (ts, action, token, sats, balance, None))
         conn.commit()
     log('TOPUP', f"token={token} sats={sats} balance={balance}")
-    return {'status':'ok','token':token,'credits':balance}
+    # return a small HTML page that redirects to dashboard for friendliness
+    html = f"<html><head><meta http-equiv='refresh' content='0; url=/d/{token}'></head><body>Topup successful. Redirecting to dashboard... If not redirected, <a href='/d/{token}'>click here</a>.</body></html>"
+    return HTMLResponse(content=html, status_code=200)
 
 @app.post('/register')
 async def register(data: dict):

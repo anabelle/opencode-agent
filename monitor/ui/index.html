@@ -13,6 +13,13 @@
     <button id="do-topup">Top up & get token</button>
     <pre id="topout"></pre>
   </section>
+  <script>
+  // ensure /d/<token> serves dashboard: client-side redirect handled below
+  if(location.pathname.startsWith('/d/')){
+    // when visiting /d/<token>, load dashboard UI
+    document.addEventListener('DOMContentLoaded',()=>{ loadDashboard(); });
+  }
+  </script>
   <section>
     <h2>Register a target</h2>
     <label>URL<input id="url" placeholder="https://example.com"></label>
@@ -73,7 +80,7 @@ async function loadDashboard(){
   let html=`<p>Token: ${j.session.token} — credits: ${j.session.credits}</p>`;
   if(j.watchers.length==0) html += '<p>No watchers yet</p>';
   for(const w of j.watchers){
-    html += `<div style="border:1px solid #ddd;padding:.5rem;margin:.5rem 0"><strong>${w.url}</strong> interval ${w.interval}s — credits usage placeholder<br><button onclick="viewWatcher('${w.wid}')">View history</button><pre id="hist-${w.wid}"></pre></div>`
+    html += `<div style="border:1px solid #ddd;padding:.5rem;margin:.5rem 0"><strong>${w.url}</strong> interval ${w.interval}s — credits usage placeholder<br><button onclick="window.viewWatcher('${w.wid}')">View history</button><pre id="hist-${w.wid}"></pre></div>`
   }
   document.getElementById('dash').innerHTML=html;
 }
