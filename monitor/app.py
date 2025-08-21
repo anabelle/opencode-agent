@@ -1,72 +1,105 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-import uvicorn
-import json, time, threading, os
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, PlainTextResponse
+import uvicorn, time, json
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from monitor import db
+import uuid
 
-APPDIR=Path('/home/ubuntu/monitor')
+APPDIR=Path('/home/ubuntu/agent-repo/monitor')
 LOG=Path('/home/ubuntu/opencode_actions.log')
-DB=APPDIR/'db.json'
-if not DB.exists(): DB.write_text('[]')
+UI_DIR=APPDIR/'ui'
+
 app=FastAPI()
 
 def log(action, details=''):
-    ts=time.strftime('%Y-%m-%dT%H:%M:%S%z')
+    ts=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     with open(LOG,'a') as f:
         f.write(f"{ts}\t{action}\t{details}\n")
 
 def check_admin_key(headers):
-    from pathlib import Path
     kfile=Path('/home/ubuntu/agent-repo/monitor/admin.key')
     if not kfile.exists(): return False
     expected=kfile.read_text().strip()
     return headers.get('x-admin-key')==expected
 
-from fastapi import Request
+# simple canonicalization: lowercase, strip trailing slash
+from urllib.parse import urlparse, urlunparse
+
+def normalize_url(u):
+    p=urlparse(u)
+    scheme=p.scheme or 'http'
+    netloc=p.netloc.lower()
+    path=p.path.rstrip('/')
+    return urlunparse((scheme, netloc, path, '', '', ''))
+
+@app.post('/init')
+async def init():
+    db.init_db()
+    return {'status':'ok'}
+
+@app.post('/topup')
+async def topup(data: dict):
+    # simulated topup: creates session if token not provided
+    sats=int(data.get('sats',0))
+    if sats<=0:
+        raise HTTPException(status_code=400, detail='sats must be >0')
+    token=data.get('token')
+    ts=time.time()
+    with db.get_conn() as conn:
+        c=conn.cursor()
+        if not token:
+            token=str(uuid.uuid4())
+            c.execute('insert into sessions(token,credits,created,last_used) values(?,?,?,?)', (token, sats, ts, ts))
+            balance=sats
+            action='CREATE_SESSION_TOPUP'
+        else:
+            cur=c.execute('select credits from sessions where token=?', (token,)).fetchone()
+            if not cur:
+                raise HTTPException(status_code=404, detail='session not found')
+            balance=cur['credits']+sats
+            c.execute('update sessions set credits=?, last_used=? where token=?', (balance, ts, token))
+            action='TOPUP'
+        c.execute('insert into ledger(ts,action,token,amount,balance,note) values(?,?,?,?,?,?)', (ts, action, token, sats, balance, None))
+        conn.commit()
+    log('TOPUP', f"token={token} sats={sats} balance={balance}")
+    return {'status':'ok','token':token,'credits':balance}
 
 @app.post('/register')
-async def register(request: Request, headers: dict = None):
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+async def register(data: dict):
+    # expects {"token":..., "url":..., "interval":60}
+    token=data.get('token')
+    url=data.get('url')
+    interval=int(data.get('interval',60))
+    if not token or not url:
+        raise HTTPException(status_code=400, detail='missing token or url')
+    norm=normalize_url(url)
+    cid=str(uuid.uuid5(uuid.NAMESPACE_URL, norm))
+    ts=time.time()
+    with db.get_conn() as conn:
+        c=conn.cursor()
+        # ensure session exists
+        if not c.execute('select 1 from sessions where token=?',(token,)).fetchone():
+            raise HTTPException(status_code=404, detail='session not found')
+        # ensure canonical target exists
+        if not c.execute('select 1 from canonical_targets where cid=?',(cid,)).fetchone():
+            c.execute('insert into canonical_targets(cid,url,fingerprint,probe_type,last_probe,last_ok,next_run) values(?,?,?,?,?,?,?)', (cid, norm, None, 'http', None, 0, ts))
+        # create watcher
+        wid=str(int(time.time()*1000))
+        c.execute('insert into watchers(wid,cid,token,interval,enabled,created) values(?,?,?,?,?,?)', (wid, cid, token, interval, 1, ts))
+        conn.commit()
+    log('REGISTER', f"token={token} wid={wid} cid={cid} url={norm}")
+    return {'wid':wid, 'cid':cid, 'url':norm}
 
-    # allow registration without admin key for MVP
-    # body may be either {'target':{...}} or {'url':'...','interval':N}
-    if headers is None:
-        headers = {}
-    target=body.get('target')
-    if not target:
-        # accept flat format
-        url=body.get('url')
-        interval=body.get('interval',60)
-        if not url:
-            raise HTTPException(status_code=400,detail='missing target url')
-        target={'url':url,'interval':interval}
-    # basic validation
-    if 'url' not in target:
-        raise HTTPException(status_code=400,detail='missing target.url')
-
-    data=json.loads(DB.read_text())
-    # deduplicate: if same target url+interval exists, return existing id
-    for entry in data:
-        t=entry.get('target',{})
-        if t.get('url')==target.get('url') and int(t.get('interval',0))==int(target.get('interval',0)):
-            log('REGISTER_DUP',f"returned existing id={entry.get('id')} target={target}")
-            return {'id':entry.get('id'),'duplicate':True}
-    entry={'id':str(int(time.time()*1000)),'target':target,'credits':0,'created':time.time()}
-    data.append(entry)
-    DB.write_text(json.dumps(data))
-    log('REGISTER',str(entry))
-    return {'id':entry['id']}
-
-@app.get('/targets')
-async def list_targets():
-    return json.loads(DB.read_text())
-
-# UI routes
-from fastapi.responses import HTMLResponse, PlainTextResponse
-UI_DIR=Path('/home/ubuntu/agent-repo/monitor/ui')
+@app.get('/d/{token}')
+async def dashboard(token: str):
+    with db.get_conn() as conn:
+        c=conn.cursor()
+        session=c.execute('select token,credits,created,last_used from sessions where token=?',(token,)).fetchone()
+        if not session:
+            raise HTTPException(status_code=404, detail='session not found')
+        watchers=c.execute('select w.wid,w.interval,w.enabled,w.created, t.url from watchers w join canonical_targets t on w.cid=t.cid where w.token=?',(token,)).fetchall()
+        wlist=[dict(w) for w in watchers]
+        return {'session':dict(session), 'watchers':wlist}
 
 @app.get('/', response_class=HTMLResponse)
 async def ui_index():
@@ -75,81 +108,39 @@ async def ui_index():
         return HTMLResponse(idx.read_text())
     return HTMLResponse('<h1>Opencode Monitor</h1>')
 
-# admin earnings page (requires x-admin-key header)
-@app.get('/admin/earnings')
-async def admin_earnings(request: Request):
-    if not check_admin_key(request.headers):
-        return PlainTextResponse('unauthorized',status_code=403)
-    earn=Path('/home/ubuntu/agent-repo/monitor/earnings.log')
-    if not earn.exists():
-        return PlainTextResponse('no earnings yet')
-    text=earn.read_text()
-    # compute total
-    total=0
-    for line in text.splitlines():
-        parts=line.split('\t')
-        for p in parts:
-            if p.startswith('cost='):
-                try:
-                    total+=int(p.split('=')[1])
-                except Exception:
-                    pass
-    return PlainTextResponse(f"total earnings sats={total}\n\n"+text)
-
-@app.post('/topup')
-async def topup(data: dict):
-    # simulated invoice: credit top-up immediately for MVP
-    db=json.loads(DB.read_text())
-    cid=data.get('id')
-    amt=int(data.get('sats',0))
-    if not cid or amt<=0:
-        raise HTTPException(status_code=400,detail='bad request')
-    for entry in db:
-        if entry['id']==cid:
-            entry['credits']=entry.get('credits',0)+amt
-            DB.write_text(json.dumps(db))
-            log('TOPUP',f"id={cid} sats={amt} new_credits={entry['credits']}")
-            return {'status':'ok','credits':entry['credits']}
-    raise HTTPException(status_code=404,detail='not found')
-
-import fcntl
+@app.get('/targets')
+async def list_targets():
+    with db.get_conn() as conn:
+        c=conn.cursor()
+        rows=c.execute('select cid,url,last_probe,last_ok,next_run from canonical_targets').fetchall()
+        return [dict(r) for r in rows]
 
 @app.post('/consume')
-async def consume(request: Request):
-    # consume credits for a check; called by checker
-    try:
-        data = await request.json()
-    except Exception:
-        data = {}
-    cid=data.get('id')
+async def consume(data: dict):
+    wid=data.get('wid')
     cost=int(data.get('cost',1))
-    # file locking to prevent concurrent writes
-    earn_path=Path('/home/ubuntu/agent-repo/monitor/earnings.log')
-    with open(DB, 'r+') as f:
-        try:
-            fcntl.flock(f, fcntl.LOCK_EX)
-            raw=f.read()
-            db=json.loads(raw) if raw else []
-            for entry in db:
-                if entry['id']==cid:
-                    if entry.get('credits',0)>=cost:
-                        entry['credits']=entry.get('credits',0)-cost
-                        f.seek(0); f.truncate(0); f.write(json.dumps(db))
-                        f.flush()
-                        # record earnings
-                        with open(earn_path,'a') as ef:
-                            ef.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S%z')}\tEARN\tid={cid}\tcost={cost}\tcredits_left={entry['credits']}\n")
-                        log('CONSUME',f"id={cid} cost={cost} credits_left={entry['credits']}")
-                        return {'status':'ok','credits':entry['credits']}
-                    else:
-                        raise HTTPException(status_code=402,detail='insufficient funds')
-            raise HTTPException(status_code=404,detail='not found')
-        finally:
-            try:
-                fcntl.flock(f, fcntl.LOCK_UN)
-            except Exception:
-                pass
-
+    ts=time.time()
+    if not wid:
+        raise HTTPException(status_code=400, detail='missing wid')
+    with db.get_conn() as conn:
+        c=conn.cursor()
+        row=c.execute('select token from watchers where wid=?',(wid,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail='watcher not found')
+        token=row['token']
+        cur=c.execute('select credits from sessions where token=?',(token,)).fetchone()
+        if cur['credits']>=cost:
+            newbal=cur['credits']-cost
+            c.execute('update sessions set credits=?, last_used=? where token=?',(newbal, ts, token))
+            c.execute('insert into ledger(ts,action,token,wid,amount,balance) values(?,?,?,?,?,?)',(ts,'CONSUME',token,wid,cost,newbal))
+            conn.commit()
+            log('CONSUME',f"wid={wid} token={token} cost={cost} credits_left={newbal}")
+            return {'status':'ok','credits':newbal}
+        else:
+            c.execute('insert into ledger(ts,action,token,wid,amount,balance,note) values(?,?,?,?,?,?,?)',(ts,'CHECK_FAILED_CHARGE',token,wid,cost,cur['credits'],'insufficient funds'))
+            conn.commit()
+            raise HTTPException(status_code=402, detail='insufficient funds')
 
 if __name__=='__main__':
-    uvicorn.run(app,host='127.0.0.1',port=8000)
+    db.init_db()
+    uvicorn.run('monitor.app:app',host='127.0.0.1',port=8000,log_level='info')
