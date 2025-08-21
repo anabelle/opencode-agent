@@ -60,23 +60,6 @@
     document.addEventListener('DOMContentLoaded',()=>{ loadDashboard(); });
   }
   </script>
-  <section>
-    <h2>Register a target</h2>
-    <label>URL<input id="url" placeholder="https://example.com"></label>
-    <label>Interval (seconds)<input id="interval" value="60"></label>
-    <button id="register">Register</button>
-    <pre id="regout"></pre>
-    <div id="regsuccess" style="color:green"></div>
-  </section>
-  <section>
-    <h2>Your dashboard</h2>
-    <div id="dash"></div>
-  </section>
-  <section>
-    <h2>Targets</h2>
-    <button id="list">Refresh list</button>
-    <pre id="listout"></pre>
-  </section>
 <script>
 const apiBase = '';
 function qs(name){
