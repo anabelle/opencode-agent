@@ -60,3 +60,6 @@
 {"ts": 1755752357.2588139, "cid": "0a3c3c32-4c00-5e0b-8943-2eb8d80ab693", "status": "ok", "http_status": 404, "latency_ms": 787.6276969909668, "size": 1256}
 {"ts": 1755752388.3236284, "cid": "0a3c3c32-4c00-5e0b-8943-2eb8d80ab693", "status": "ok", "http_status": 404, "latency_ms": 343.9788818359375, "size": 1256}
 {"ts": 1755752419.604427, "cid": "0a3c3c32-4c00-5e0b-8943-2eb8d80ab693", "status": "error", "error": ""}
+{"ts": 1755752460.8219984, "cid": "0a3c3c32-4c00-5e0b-8943-2eb8d80ab693", "status": "ok", "http_status": 404, "latency_ms": 331.5556049346924, "size": 1256}
+{"ts": 1755752492.126387, "cid": "0a3c3c32-4c00-5e0b-8943-2eb8d80ab693", "status": "ok", "http_status": 404, "latency_ms": 1187.3044967651367, "size": 1256}
+{"ts": 1755752523.515312, "cid": "0a3c3c32-4c00-5e0b-8943-2eb8d80ab693", "status": "ok", "http_status": 404, "latency_ms": 862.9932403564453, "size": 1256}
