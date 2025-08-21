@@ -9,8 +9,7 @@ EMER=APP/'EMERGENCY_PAUSE'
 def log(action,details=''):
     ts=time.strftime('%Y-%m-%dT%H:%M:%S%z')
     with open(LOG,'a') as f:
-        f.write(f"{ts}	{action}	{details}
-")
+        f.write(f"{ts}\t{action}\t{details}\n")
 
 while True:
     if EMER.exists():
@@ -49,7 +48,17 @@ while True:
                 s.close()
         entry['last_check']=time.time()
         entry['last_ok']=ok
-        log('CHECK',f"id={entry.get('id')} ok={ok} target={t}")
+        # attempt to consume credits via local API
+        try:
+            import requests
+            resp=requests.post('http://127.0.0.1:8000/consume',json={'id':entry.get('id'),'cost':1},timeout=5)
+            if resp.status_code==200:
+                log('CHECK',f"id={entry.get('id')} ok={ok} target={t} consumed=1 credits_left={resp.json().get('credits')}")
+            else:
+                log('CHECK_FAILED_CHARGE',f"id={entry.get('id')} status={resp.status_code} detail={resp.text}")
+        except Exception as e:
+            log('CHECK_CHARGE_ERR',str(e))
+        
     try:
         open(DB,'w').write(json.dumps(data))
     except Exception:
