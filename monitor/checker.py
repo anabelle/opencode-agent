@@ -60,14 +60,25 @@ while True:
             last_probe = row['last_probe'] if row else 0
             if time.time() < (last_probe + original_interval): continue
 
-
-
         # simple HTTP/port probe
         ok=False
+        latency_ms=0
+        size=0
         if url and probe_type == 'http':
             try:
-                r=subprocess.run(['curl','-sSf','--max-time','10',url],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                import time
+                # Use curl to get timing info in a clean format
+                r=subprocess.run(['curl','-sS','--max-time','10','-o','/dev/null','-w','%{time_total}:%{size_download}',url],capture_output=True,text=True)
                 ok=(r.returncode==0)
+                if ok and r.stdout:
+                    # Parse curl output: "time_total:size_download"
+                    parts = r.stdout.strip().split(':')
+                    if len(parts) == 2:
+                        try:
+                            latency_ms = float(parts[0]) * 1000  # Convert seconds to milliseconds
+                            size = int(parts[1])  # Response size in bytes
+                        except ValueError:
+                            pass
             except Exception:
                 ok=False
         elif probe_type == 'port' and 'host' in entry and 'port' in entry:
@@ -121,8 +132,8 @@ while True:
                                     'ts': time.time(),
                                     'status': 'ok' if ok else 'fail',
                                     'http_status': 200 if ok else 0,
-                                    'latency_ms': 0,
-                                    'size': 0
+                                    'latency_ms': latency_ms,
+                                    'size': size
                                 }
                             }
                             with open(hist,'a') as hf:
