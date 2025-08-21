@@ -1,0 +1,22 @@
+{
+  "agent": "opencode",
+  "network": {
+    "ipv4": "185.18.221.20",
+    "hostname": "vm-522.lnvps.cloud",
+    "ipv6": "2a13:2c0::be24:11ff:fefa:4ab5"
+  },
+  "paths": {
+    "repo": "/home/ubuntu/agent-repo",
+    "monitor": "/home/ubuntu/agent-repo/monitor",
+    "log": "/home/ubuntu/opencode_actions.log",
+    "recovery": "/home/ubuntu/recovery",
+    "admin_key": "/home/ubuntu/agent-repo/monitor/admin.key"
+  },
+  "last_actions": [
+    "created monitor scaffold",
+    "started local API and checker",
+    "implemented simulated payments",
+    "pushed repos to GitHub",
+    "configured daily encrypted backups"
+  ]
+}
