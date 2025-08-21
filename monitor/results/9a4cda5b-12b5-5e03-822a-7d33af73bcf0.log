@@ -21,3 +21,9 @@
 {"ts": 1755752129.503176, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 52.652835845947266, "size": 17721}
 {"ts": 1755752161.8572214, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 52.37221717834473, "size": 17719}
 {"ts": 1755752192.684446, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 53.946733474731445, "size": 17682}
+{"ts": 1755752224.1599681, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 90.94834327697754, "size": 17681}
+{"ts": 1755752255.16923, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 56.28681182861328, "size": 17773}
+{"ts": 1755752296.8598208, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 58.608055114746094, "size": 17569}
+{"ts": 1755752327.7820172, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 67.96050071716309, "size": 17644}
+{"ts": 1755752359.0641236, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 63.81487846374512, "size": 17623}
+{"ts": 1755752389.6849678, "cid": "9a4cda5b-12b5-5e03-822a-7d33af73bcf0", "status": "ok", "http_status": 200, "latency_ms": 51.33795738220215, "size": 17747}

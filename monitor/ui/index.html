@@ -3,16 +3,56 @@
 <head>
   <meta charset="utf-8">
   <title>Opencode Uptime Monitor</title>
-  <style>body{font-family:Arial,sans-serif;max-width:900px;margin:2rem auto;padding:1rem} label{display:block;margin-top:1rem} input,button,textarea{padding:.5rem;width:100%}</style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@radix-ui/react-slot@1.0.2/dist/index.js"></script>
+  <style>body{font-family:Inter,sans-serif;max-width:900px;margin:2rem auto;padding:1rem}</style>
 </head>
-<body>
-  <h1>Opencode Uptime Monitor (MVP)</h1>
-  <section>
-    <h2>Top up (simulated)</h2>
-    <label>Sats<input id="sats" value="100"></label>
-    <button id="do-topup">Top up & get token</button>
-    <pre id="topout"></pre>
-  </section>
+<body class="bg-gray-50 text-gray-900">
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-center mb-8">Opencode Uptime Monitor</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Top up (simulated)</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Sats</label>
+            <input id="sats" value="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <button id="do-topup" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Top up & get token</button>
+          <pre id="topout" class="mt-4 p-2 bg-gray-100 rounded text-sm"></pre>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Register a target</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">URL</label>
+            <input id="url" placeholder="https://example.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Interval (seconds)</label>
+            <input id="interval" value="60" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <button id="register" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">Register</button>
+          <pre id="regout" class="mt-4 p-2 bg-gray-100 rounded text-sm"></pre>
+          <div id="regsuccess" class="mt-2 text-green-600 text-sm"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Your dashboard</h2>
+      <div id="dash" class="space-y-4"></div>
+    </div>
+
+    <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Targets</h2>
+      <button id="list" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Refresh list</button>
+      <pre id="listout" class="mt-4 p-2 bg-gray-100 rounded text-sm"></pre>
+    </div>
+  </div>
   <script>
   // ensure /d/<token> serves dashboard: client-side redirect handled below
   if(location.pathname.startsWith('/d/')){
