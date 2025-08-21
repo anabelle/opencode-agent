@@ -3,10 +3,10 @@
 ## Phase A - stabilize & sessionless MVP
 - [x] Implement earnings ledger (earnings.log) and per-watcher receipts
 - [x] Add customer history directories (customers/*)
-- [ ] Implement sessions (session_token files) and migration script
-- [ ] Update API to require/accept session_token and provide /session/topup
-- [ ] Update UI to create session automatically after topup and redirect to /d/<token>
-- [ ] Implement canonical targets and watcher model in scheduler
+- [x] Implement sessions (session_token files) and migration script
+- [x] Update API to require/accept session_token and provide /session/topup
+- [x] Update UI to create session automatically after topup and redirect to /d/<token>
+- [x] Implement canonical targets and watcher model in scheduler
 
 ## Phase B - hardening
 - [ ] Move persistence to SQLite
