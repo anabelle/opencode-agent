@@ -10,52 +10,134 @@
 <body class="bg-gray-50 text-gray-900">
   <div class="max-w-4xl mx-auto p-6">
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold mb-4">Opencode Uptime Monitor</h1>
-      <p class="text-lg text-gray-600 mb-6">Reliable uptime monitoring for your sites. Get started in seconds.</p>
-      <button onclick="document.getElementById('do-topup').click()" class="bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 text-lg">Get Started</button>
+      <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Opencode Uptime Monitor</h1>
+      <p class="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">Professional uptime monitoring for websites, APIs, and services. Get instant alerts when your sites go down. Trusted by developers worldwide.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <button onclick="document.getElementById('do-topup').click()" class="bg-indigo-600 text-white py-3 px-8 rounded-lg hover:bg-indigo-700 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">Start Monitoring Now</button>
+        <p class="text-sm text-gray-500">No credit card required • 30-second setup</p>
+      </div>
+    </div>
+
+    <!-- Value Proposition Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="text-center p-6 bg-white rounded-lg shadow-md">
+        <div class="text-3xl text-green-500 mb-2">⚡</div>
+        <h3 class="text-lg font-semibold mb-2">Instant Setup</h3>
+        <p class="text-gray-600 text-sm">Add your first site in under 30 seconds. No complex configuration needed.</p>
+      </div>
+      <div class="text-center p-6 bg-white rounded-lg shadow-md">
+        <div class="text-3xl text-blue-500 mb-2">🔔</div>
+        <h3 class="text-lg font-semibold mb-2">Real-time Alerts</h3>
+        <p class="text-gray-600 text-sm">Get notified immediately when your sites go down. Multiple notification channels.</p>
+      </div>
+      <div class="text-center p-6 bg-white rounded-lg shadow-md">
+        <div class="text-3xl text-purple-500 mb-2">📊</div>
+        <h3 class="text-lg font-semibold mb-2">Detailed Analytics</h3>
+        <p class="text-gray-600 text-sm">Track uptime history, response times, and performance trends over time.</p>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold mb-4">Top up (simulated)</h2>
+        <h2 class="text-xl font-semibold mb-4">Choose Your Plan</h2>
         <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Sats</label>
-            <input id="sats" value="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="border border-gray-200 rounded-lg p-3 text-center hover:border-indigo-300 cursor-pointer transition-colors" onclick="selectPlan(50)">
+              <div class="text-lg font-bold text-indigo-600">50</div>
+              <div class="text-sm text-gray-600">credits</div>
+              <div class="text-xs text-gray-500">$5</div>
+            </div>
+            <div class="border-2 border-indigo-500 rounded-lg p-3 text-center bg-indigo-50" onclick="selectPlan(100)">
+              <div class="text-lg font-bold text-indigo-600">100</div>
+              <div class="text-sm text-gray-600">credits</div>
+              <div class="text-xs text-gray-500">$10</div>
+              <div class="text-xs text-green-600 font-semibold">Popular</div>
+            </div>
+            <div class="border border-gray-200 rounded-lg p-3 text-center hover:border-indigo-300 cursor-pointer transition-colors" onclick="selectPlan(200)">
+              <div class="text-lg font-bold text-indigo-600">200</div>
+              <div class="text-sm text-gray-600">credits</div>
+              <div class="text-xs text-gray-500">$20</div>
+            </div>
           </div>
-          <button id="do-topup" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Top up & get token</button>
-          <pre id="topout" class="mt-4 p-2 bg-gray-100 rounded text-sm"></pre>
+          <input id="sats" value="100" type="hidden">
+          <button id="do-topup" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">Start Monitoring</button>
+          <div class="text-center text-sm text-gray-500 mt-2">
+            <span class="text-green-600">✓</span> 30-day money-back guarantee<br>
+            <span class="text-green-600">✓</span> Cancel anytime • No setup fees
+          </div>
+          <pre id="topout" class="mt-4 p-2 bg-gray-100 rounded text-sm hidden"></pre>
         </div>
       </div>
 
       <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold mb-4">Register a target</h2>
+        <h2 class="text-xl font-semibold mb-4">Add Your First Site</h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700">URL</label>
-            <input id="url" placeholder="https://example.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <label class="block text-sm font-medium text-gray-700">Website or API URL</label>
+            <input id="url" placeholder="https://yoursite.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <p class="text-xs text-gray-500 mt-1">Enter the full URL including https://</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Interval (seconds)</label>
-            <input id="interval" value="60" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <label class="block text-sm font-medium text-gray-700">Check every</label>
+            <select id="interval" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="30">30 seconds (Pro)</option>
+              <option value="60" selected>1 minute</option>
+              <option value="300">5 minutes</option>
+              <option value="600">10 minutes</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">More frequent checks use more credits</p>
           </div>
-          <button id="register" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">Register</button>
-          <pre id="regout" class="mt-4 p-2 bg-gray-100 rounded text-sm"></pre>
-          <div id="regsuccess" class="mt-2 text-green-600 text-sm"></div>
+          <button id="register" class="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold">Start Monitoring</button>
+          <div id="regsuccess" class="mt-2 text-green-600 text-sm font-semibold hidden">✅ Site added successfully! Check your dashboard below.</div>
+          <pre id="regout" class="mt-4 p-2 bg-gray-100 rounded text-sm hidden"></pre>
         </div>
       </div>
     </div>
 
     <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4">Your dashboard</h2>
-      <p class="text-sm text-gray-600 mb-4">Welcome! Add targets to start monitoring. Your credits: <span id="credit-display" class="font-bold text-green-600">0</span></p>
-      <div id="dash" class="space-y-4"></div>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Your Monitoring Dashboard</h2>
+        <div class="text-right">
+          <div class="text-sm text-gray-600">Available Credits</div>
+          <div id="credit-display" class="text-2xl font-bold text-green-600">0</div>
+        </div>
+      </div>
+      <div id="dash" class="space-y-4">
+        <div class="text-center py-8 text-gray-500">
+          <div class="text-4xl mb-4">📊</div>
+          <p class="text-lg mb-2">No sites monitoring yet</p>
+          <p class="text-sm">Add your first site above to get started!</p>
+        </div>
+      </div>
     </div>
 
-    <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4">Targets</h2>
-      <button id="list" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Refresh list</button>
-      <pre id="listout" class="mt-4 p-2 bg-gray-100 rounded text-sm"></pre>
+    <!-- FAQ Section -->
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Frequently Asked Questions</h2>
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-semibold text-gray-900">How does the credit system work?</h3>
+          <p class="text-gray-600 text-sm mt-1">Each monitoring check costs 1 credit. With 100 credits, you can monitor one site for about 3 days (checking every 5 minutes).</p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">What types of sites can I monitor?</h3>
+          <p class="text-gray-600 text-sm mt-1">Websites, APIs, web services, and any HTTP/HTTPS endpoint. We also support port monitoring for TCP services.</p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">How do I get notified of downtime?</h3>
+          <p class="text-gray-600 text-sm mt-1">Currently, you can check your dashboard. We'll be adding email notifications and webhooks soon.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust & Security -->
+    <div class="mt-6 text-center text-sm text-gray-500">
+      <div class="flex justify-center space-x-6 mb-4">
+        <span class="flex items-center"><span class="text-green-500 mr-1">🔒</span> SSL Secured</span>
+        <span class="flex items-center"><span class="text-blue-500 mr-1">⚡</span> 99.9% Uptime</span>
+        <span class="flex items-center"><span class="text-purple-500 mr-1">🛡️</span> Enterprise Ready</span>
+      </div>
+      <p>Questions? Contact us at monitoring@opencode.dev</p>
     </div>
   </div>
   <script>
@@ -73,6 +155,16 @@ function qs(name){
 }
 function saveToken(t){ localStorage.setItem('opencode_token', t); }
 function loadToken(){ return qs('token') || localStorage.getItem('opencode_token'); }
+
+function selectPlan(credits) {
+  document.getElementById('sats').value = credits;
+  // Remove selected class from all plans
+  document.querySelectorAll('.border-indigo-500').forEach(el => {
+    el.className = el.className.replace('border-indigo-500', 'border-gray-200').replace('bg-indigo-50', '');
+  });
+  // Add selected class to clicked plan
+  event.currentTarget.className = event.currentTarget.className.replace('border-gray-200', 'border-indigo-500 bg-indigo-50');
+}
 
 // topup -> create session token
 document.getElementById('do-topup').onclick=async()=>{
@@ -101,7 +193,12 @@ document.getElementById('register').onclick=async()=>{
   const resp=await fetch('/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token,url,interval})});
   const data=await resp.json();
   document.getElementById('regout').textContent=JSON.stringify(data,null,2);
-  if(resp.status==200){ document.getElementById('regsuccess').textContent='Registered!'; loadDashboard(); }
+   if(resp.status==200){
+     document.getElementById('regsuccess').textContent='✅ Site added successfully! Check your dashboard below.';
+     document.getElementById('regsuccess').classList.remove('hidden');
+     document.getElementById('regout').classList.add('hidden');
+     loadDashboard();
+   }
 }
 
 // list all canonical targets

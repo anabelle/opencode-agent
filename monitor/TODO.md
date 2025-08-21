@@ -32,6 +32,41 @@
 - [x] Add last_probe column to watchers table for independent timing
 - [x] Resolve all watcher functionality issues (credits, history, timing)
 
+## MVP Polish & UX Improvements (HIGH PRIORITY)
+
+### Phase 1: Landing Page & Branding (Week 1)
+- [ ] **Replace "Top up (simulated)" with professional payment flow**
+- [ ] **Add clear value proposition and hero section**
+- [ ] **Create pricing section with clear plans**
+- [ ] **Add testimonials/social proof section**
+- [ ] **Improve visual design and branding**
+- [ ] **Add mobile-responsive design**
+- [ ] **Create clear call-to-action flow**
+
+### Phase 2: User Journey & Onboarding (Week 2)
+- [ ] **Implement proper onboarding flow for new users**
+- [ ] **Add usage examples and getting started guide**
+- [ ] **Create clear next steps after target registration**
+- [ ] **Add email/token recovery system**
+- [ ] **Implement usage tutorials and tooltips**
+- [ ] **Add progress indicators and success states**
+
+### Phase 3: Payment & Trust (Week 3)
+- [ ] **Replace fake payment with proper payment integration**
+- [ ] **Add money-back guarantee and trust signals**
+- [ ] **Create clear refund policy**
+- [ ] **Add SSL certificate and security badges**
+- [ ] **Implement proper invoice/receipt system**
+- [ ] **Add payment method options**
+
+### Phase 4: Support & Documentation (Week 4)
+- [ ] **Create comprehensive FAQ section**
+- [ ] **Add contact information and support channels**
+- [ ] **Implement help documentation and guides**
+- [ ] **Add status page for service transparency**
+- [ ] **Create API documentation**
+- [ ] **Add community links and resources**
+
 ## Testing
 - [x] Set up testing framework (pytest, coverage) - 74% overall coverage achieved
 - [x] Add unit tests for core components:
